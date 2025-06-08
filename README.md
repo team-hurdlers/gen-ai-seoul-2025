@@ -3,7 +3,7 @@
 Gen AI Seoul 2025 부스를 위한 공식 랜딩페이지입니다.  
 **Neon101 × Hurdlers101 × Superbot101**이 함께하는 AX Company Group의 부스를 소개하고, 무료 AX 컨설팅 신청을 받는 페이지입니다.
 
-🌐 **Live Demo**: *(배포 후 업데이트 예정)*
+🌐 **Live Demo**: **[https://gen-ai-seoul-2025.vercel.app](https://gen-ai-seoul-2025.vercel.app)**
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/team-hurdlers/gen-ai-seoul-2025)
 
