@@ -5,7 +5,7 @@ Gen AI Seoul 2025 부스를 위한 공식 랜딩페이지입니다.
 
 🌐 **Live Demo**: *(배포 후 업데이트 예정)*
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/gen-ai-seoul-2025)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/team-hurdlers/gen-ai-seoul-2025)
 
 ## 🎯 주요 기능
 
