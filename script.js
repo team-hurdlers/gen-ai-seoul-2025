@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize form handling
     initializeForm();
+    
+    // Initialize Superbot101 gallery with infinite scroll
+    initializeGallery();
 });
 
 // Form handling and Google Sheets integration
@@ -53,6 +56,8 @@ function initializeForm() {
             company: formData.get('company'),
             email: formData.get('email'),
             interest: formData.get('interest'),
+            privacyRequired: formData.get('privacyRequired'),
+            marketingOptional: formData.get('marketingOptional'),
             timestamp: new Date().toLocaleString('ko-KR'),
             source: 'Gen AI Seoul 2025 Landing Page'
         };
@@ -142,6 +147,11 @@ function validateForm(data) {
         errors.push('올바른 이메일 주소를 입력해 주세요.');
     }
     
+    // 개인정보 수집 및 이용 동의 (필수) 체크
+    if (!data.privacyRequired) {
+        errors.push('개인정보 수집 및 이용 동의는 필수입니다.');
+    }
+    
     if (errors.length > 0) {
         showErrorMessage(errors.join('<br>'));
         return false;
@@ -229,7 +239,134 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.value = value;
         });
     }
+    
+    // 개인정보 동의 체크박스 이벤트 리스너 설정
+    initConsentCheckboxes();
 });
+
+// 개인정보 동의 관련 변수
+let currentModalType = null;
+
+// 개인정보 동의 체크박스 초기화
+function initConsentCheckboxes() {
+    const consentAll = document.getElementById('consentAll');
+    const privacyRequired = document.getElementById('privacyRequired');
+    const marketingOptional = document.getElementById('marketingOptional');
+    
+    if (consentAll && privacyRequired && marketingOptional) {
+        // 전체동의 체크박스 이벤트
+        consentAll.addEventListener('change', function() {
+            privacyRequired.checked = this.checked;
+            marketingOptional.checked = this.checked;
+        });
+        
+        // 개별 체크박스 이벤트
+        privacyRequired.addEventListener('change', updateConsentAllStatus);
+        marketingOptional.addEventListener('change', updateConsentAllStatus);
+    }
+}
+
+// 전체동의 상태 업데이트
+function updateConsentAllStatus() {
+    const consentAll = document.getElementById('consentAll');
+    const privacyRequired = document.getElementById('privacyRequired');
+    const marketingOptional = document.getElementById('marketingOptional');
+    
+    if (privacyRequired && marketingOptional && consentAll) {
+        consentAll.checked = privacyRequired.checked && marketingOptional.checked;
+    }
+}
+
+// 동의 세부사항 토글
+function toggleConsentDetails() {
+    const wrapper = document.getElementById('consentDetailsWrapper');
+    const toggleBtn = document.querySelector('.consent-toggle-btn');
+    
+    if (wrapper.classList.contains('expanded')) {
+        wrapper.classList.remove('expanded');
+        toggleBtn.classList.remove('expanded');
+    } else {
+        wrapper.classList.add('expanded');
+        toggleBtn.classList.add('expanded');
+    }
+}
+
+// 개인정보 동의 모달 열기
+function openConsentModal(type) {
+    currentModalType = type;
+    const modal = document.getElementById('consentModal');
+    const title = document.getElementById('consentModalTitle');
+    const body = document.getElementById('consentModalBody');
+    
+    if (type === 'privacy') {
+        title.textContent = '개인정보 수집 동의 안내';
+        body.innerHTML = `
+            <h4>개인정보 수집 및 이용에 대한 동의서</h4>
+            <p>(주)허들러는 「개인정보 보호법」 제15조에 의거하여 개인정보 수집·이용을 동의를 받고 있습니다. 정보주체가 동의한 내용 외의 다른 목적으로 활용하지 않습니다.</p>
+            
+            <h4>• 개인정보 수집·이용 목적</h4>
+            <p>상담 문의 대응을 위함</p>
+            
+            <h4>• 수집하는 개인정보의 항목</h4>
+            <p>휴대전화번호</p>
+            
+            <h4>• 개인정보의 보유 및 이용 기간</h4>
+            <p>정보 문의 당일 활용일로부터 1년간 보관 후 파기</p>
+            
+            <p style="margin-top: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; font-size: 0.9rem; color: #6b7280;">
+                ※ 귀하는 본 동의를 거부하실 수 있습니다. 다만, 위 개인정보 수집·이용에 관한 동의를 상담 대응을 위한 필수 사항이므로, 위 사항에 동의하셔야만 상담 문의가 가능합니다.
+            </p>
+        `;
+    } else if (type === 'marketing') {
+        title.textContent = '광고성 정보 수신 동의 안내';
+        body.innerHTML = `
+            <h4>광고성 정보 수신에 대한 동의서</h4>
+            <p>(주)허들러는 다음과 같은 광고성 정보를 전송하고자 합니다.</p>
+            
+            <h4>• 수신하는 개인정보의 항목</h4>
+            <p>휴대전화번호</p>
+            
+            <h4>• 수집하는 개인정보의 항목</h4>
+            <p>휴대전화번호</p>
+            
+            <h4>• 개인정보의 보유 및 이용 기간</h4>
+            <p>정보 문의 당일 활용일로부터 1년간 보관 후 파기</p>
+            
+            <p style="margin-top: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; font-size: 0.9rem; color: #6b7280;">
+                ※ 동의를 하지 않아도 무료 컨설팅 신청은 가능합니다.
+            </p>
+        `;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// 개인정보 동의 모달 닫기
+function closeConsentModal() {
+    const modal = document.getElementById('consentModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    currentModalType = null;
+}
+
+// 모달에서 동의하기
+function agreeFromModal() {
+    if (currentModalType === 'privacy') {
+        const privacyCheckbox = document.getElementById('privacyRequired');
+        if (privacyCheckbox) {
+            privacyCheckbox.checked = true;
+        }
+    } else if (currentModalType === 'marketing') {
+        const marketingCheckbox = document.getElementById('marketingOptional');
+        if (marketingCheckbox) {
+            marketingCheckbox.checked = true;
+        }
+    }
+    
+    updateConsentAllStatus();
+    closeConsentModal();
+}
 
 // Scroll to top functionality (optional)
 function scrollToTop() {
@@ -280,167 +417,167 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Reference Gallery Functions
-function filterReferences(category) {
-    const items = document.querySelectorAll('.reference-item');
-    const buttons = document.querySelectorAll('.filter-btn');
-    const loadMoreBtn = document.querySelector('.btn-secondary');
+// Superbot101 갤러리 무한스크롤 기능
+let galleryImagesLoaded = 0;
+let isLoadingMore = false;
+let hasMoreImages = true;
+
+function initializeGallery() {
+    const allItems = document.querySelectorAll('.reference-item');
+    const initialCount = window.innerWidth <= 768 ? 6 : 12; // 모바일: 6개, PC: 12개
     
-    // Update active button - data-category 속성으로 정확히 매칭
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('data-category') === category || 
-            (category === 'all' && btn.textContent.includes('전체'))) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // 모든 이미지 일단 숨김 (CSS 숨김 제거)
-    items.forEach(item => {
-        item.style.display = 'none';
-        item.classList.remove('hidden');
-    });
-    
-    // 필터링된 이미지들 찾기
-    let filteredItems;
-    if (category === 'all') {
-        filteredItems = Array.from(items);
-    } else {
-        filteredItems = Array.from(items).filter(item => 
-            item.getAttribute('data-category') === category
-        );
-    }
-    
-    // 초기 표시 개수 설정 (PC: 9개, 모바일: 5개)
-    const isMobile = window.innerWidth <= 768;
-    const initialCount = isMobile ? 5 : 9;
-    
-    // 초기 개수만큼만 표시
-    filteredItems.forEach((item, index) => {
+    // 모든 이미지를 일단 숨김
+    allItems.forEach((item, index) => {
         if (index < initialCount) {
-            setTimeout(() => {
-                item.style.display = 'block';
-            }, index * 50); // 순차적으로 나타나는 효과
-        }
-    });
-    
-    // "더 많은 작품 보기" 버튼 상태 업데이트
-    if (loadMoreBtn) {
-        if (filteredItems.length > initialCount) {
-            loadMoreBtn.textContent = '더 많은 작품 보기';
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.style.display = 'inline-block';
+            item.style.display = 'block';
+            galleryImagesLoaded++;
         } else {
-            loadMoreBtn.style.display = 'none';
+            item.style.display = 'none';
         }
-    }
-    
-    // Track filtering event
-    trackEvent('reference_filter', {
-        category: category,
-        totalItems: filteredItems.length,
-        initialShown: Math.min(initialCount, filteredItems.length)
     });
+    
+    // 무한스크롤 이벤트 리스너 추가
+    window.addEventListener('scroll', throttle(checkScrollPosition, 100));
+    
+    // 더 로드할 이미지가 있는지 확인
+    if (allItems.length <= initialCount) {
+        hasMoreImages = false;
+    }
 }
 
-// 카테고리별 텍스트 매핑
-function getCategoryText(category) {
-    const categoryMap = {
-        'all': '전체',
-        'fashion': '패션',
-        'product': '제품',
-        'portrait': '포트레이트',
-        'automotive': '자동차',
-        'food': '음식'
-    };
-    return categoryMap[category] || category;
+function checkScrollPosition() {
+    if (!hasMoreImages || isLoadingMore) return;
+    
+    // 페이지 하단에서 200px 위에 도달했을 때 더 로드
+    const scrollTop = window.pageYOffset;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    if (scrollTop + windowHeight >= documentHeight - 200) {
+        loadMoreImages();
+    }
 }
 
-function loadMoreReferences() {
-    const btn = event.target;
-    const originalText = btn.textContent;
-    const grid = document.getElementById('referencesGrid');
-    // 현재 활성 필터 찾기
-    const activeFilterBtn = document.querySelector('.filter-btn.active');
-    const currentFilter = activeFilterBtn?.getAttribute('data-category') || 
-                         (activeFilterBtn?.textContent.includes('전체') ? 'all' : 'all');
+function loadMoreImages() {
+    if (isLoadingMore || !hasMoreImages) return;
     
-    // 현재 표시되는 이미지 개수 확인
-    let visibleItems;
-    if (currentFilter === 'all') {
-        visibleItems = document.querySelectorAll('.reference-item:not([style*="display: none"])');
-    } else {
-        visibleItems = document.querySelectorAll(`.reference-item[data-category="${currentFilter}"]:not([style*="display: none"])`);
-    }
+    isLoadingMore = true;
     
-    // 숨겨진 이미지들 찾기
-    let hiddenItems;
-    if (currentFilter === 'all') {
-        hiddenItems = document.querySelectorAll('.reference-item[style*="display: none"]');
-    } else {
-        hiddenItems = document.querySelectorAll(`.reference-item[data-category="${currentFilter}"][style*="display: none"]`);
-    }
+    const allItems = document.querySelectorAll('.reference-item');
+    const hiddenItems = document.querySelectorAll('.reference-item[style*="display: none"]');
     
     if (hiddenItems.length === 0) {
-        // 더 이상 보여줄 이미지가 없으면
-        btn.textContent = '모든 작품을 확인했습니다';
-        btn.disabled = true;
+        hasMoreImages = false;
+        isLoadingMore = false;
+        showTemporaryMessage('모든 작품을 확인했습니다! 🎨');
         return;
     }
     
-    // 로딩 상태 표시
-    btn.textContent = '로딩 중...';
-    btn.disabled = true;
+    // 디바이스별 로드 개수 설정
+    const loadCount = window.innerWidth <= 768 ? 4 : 8; // 모바일: 4개씩, PC: 8개씩
+    const itemsToShow = Math.min(loadCount, hiddenItems.length);
     
-    setTimeout(() => {
-        // 디바이스별 로드 개수 설정
-        const isMobile = window.innerWidth <= 768;
-        const loadCount = isMobile ? 3 : 9; // 모바일: 3개씩, PC: 9개씩
-        
-        // 지정된 개수만큼 이미지 표시
-        for (let i = 0; i < Math.min(loadCount, hiddenItems.length); i++) {
+    // 로딩 인디케이터 표시
+    showLoadingIndicator();
+    
+    // 이미지를 순차적으로 로드
+    for (let i = 0; i < itemsToShow; i++) {
+        setTimeout(() => {
             hiddenItems[i].style.display = 'block';
+            hiddenItems[i].style.opacity = '0';
+            hiddenItems[i].style.transform = 'translateY(30px)';
             
-            // 애니메이션 효과
+            // 새로 로드된 이미지에 클릭 이벤트 추가
+            addClickEventToItem(hiddenItems[i]);
+            
+            // 페이드인 애니메이션
             setTimeout(() => {
-                hiddenItems[i].style.opacity = '0';
-                hiddenItems[i].style.transform = 'translateY(20px)';
-                
+                hiddenItems[i].style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                hiddenItems[i].style.opacity = '1';
+                hiddenItems[i].style.transform = 'translateY(0)';
+            }, 100);
+            
+            galleryImagesLoaded++;
+            
+            // 마지막 이미지 로드 완료 후
+            if (i === itemsToShow - 1) {
                 setTimeout(() => {
-                    hiddenItems[i].style.transition = 'all 0.5s ease';
-                    hiddenItems[i].style.opacity = '1';
-                    hiddenItems[i].style.transform = 'translateY(0)';
-                }, 50);
-            }, i * 100); // 순차적으로 나타나는 효과
-        }
-        
-        // 버튼 상태 복원
-        btn.textContent = originalText;
-        btn.disabled = false;
-        
-        // 더 이상 로드할 이미지가 있는지 확인
-        const remainingHidden = document.querySelectorAll(
-            currentFilter === 'all' 
-                ? '.reference-item[style*="display: none"]'
-                : `.reference-item[data-category="${currentFilter}"][style*="display: none"]`
-        );
-        
-        if (remainingHidden.length === 0) {
-            btn.textContent = '모든 작품을 확인했습니다';
-            btn.disabled = true;
-        }
-        
-        // 사용자에게 피드백
-        const loadedCount = Math.min(loadCount, hiddenItems.length);
-        showTemporaryMessage(`${loadedCount}개의 새로운 작품을 불러왔습니다! 🎨`);
-        
-    }, 800); // 로딩 애니메이션 시간
+                    hideLoadingIndicator();
+                    isLoadingMore = false;
+                    
+                    // 더 로드할 이미지가 있는지 확인
+                    const remainingHidden = document.querySelectorAll('.reference-item[style*="display: none"]');
+                    if (remainingHidden.length === 0) {
+                        hasMoreImages = false;
+                        showTemporaryMessage('모든 작품을 확인했습니다! 🎨');
+                    }
+                }, 600);
+            }
+        }, i * 100); // 순차적 로드
+    }
     
-    // Track event
-    trackEvent('load_more_references', {
-        filter: currentFilter,
+    // 트래킹
+    trackEvent('infinite_scroll_load', {
+        images_loaded: itemsToShow,
+        total_loaded: galleryImagesLoaded + itemsToShow,
         device: window.innerWidth <= 768 ? 'mobile' : 'desktop'
     });
+}
+
+// 로딩 인디케이터 표시
+function showLoadingIndicator() {
+    // 기존 로딩 인디케이터가 있으면 제거
+    const existingIndicator = document.getElementById('galleryLoadingIndicator');
+    if (existingIndicator) existingIndicator.remove();
+    
+    const indicator = document.createElement('div');
+    indicator.id = 'galleryLoadingIndicator';
+    indicator.innerHTML = `
+        <div style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 0.9rem;
+        ">
+            <div style="
+                width: 20px;
+                height: 20px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #8A2BE2;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-right: 10px;
+            "></div>
+            새로운 작품을 불러오는 중...
+        </div>
+    `;
+    
+    const gallery = document.getElementById('referencesGrid');
+    gallery.insertAdjacentElement('afterend', indicator);
+}
+
+// 로딩 인디케이터 제거
+function hideLoadingIndicator() {
+    const indicator = document.getElementById('galleryLoadingIndicator');
+    if (indicator) {
+        indicator.style.opacity = '0';
+        setTimeout(() => indicator.remove(), 300);
+    }
+}
+
+// 스크롤 이벤트 최적화를 위한 throttle 함수
+function throttle(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 function showTemporaryMessage(message) {
@@ -489,26 +626,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add click events to reference items for modal
     const referenceItems = document.querySelectorAll('.reference-item');
     referenceItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const img = this.querySelector('img');
-            const title = this.querySelector('h4')?.textContent || 'Superbot101 작품';
-            const description = this.querySelector('p')?.textContent || '';
-            const category = this.getAttribute('data-category');
-            
-            // 모달 열기
-            openImageModal(img.src, title, description, category);
-            
-            // 트래킹
-            trackEvent('reference_view', {
-                category: category,
-                title: title
-            });
-        });
+        addClickEventToItem(item);
     });
     
     // Initialize image modal
     createImageModal();
 });
+
+// 이미지 아이템에 클릭 이벤트 추가하는 함수
+function addClickEventToItem(item) {
+    // 이미 이벤트가 추가되어 있는지 확인
+    if (item.getAttribute('data-click-added')) return;
+    
+    item.addEventListener('click', function() {
+        const img = this.querySelector('img');
+        const title = this.querySelector('h4')?.textContent || 'Superbot101 작품';
+        const description = this.querySelector('p')?.textContent || '';
+        const category = this.getAttribute('data-category') || 'general';
+        
+        // 모달 열기
+        openImageModal(img.src, title, description, category);
+        
+        // 트래킹
+        trackEvent('reference_view', {
+            category: category,
+            title: title
+        });
+    });
+    
+    // 이벤트 추가 표시
+    item.setAttribute('data-click-added', 'true');
+}
+
+// 카테고리 텍스트 변환 함수
+function getCategoryText(category) {
+    const categoryMap = {
+        'all': '전체',
+        'fashion': '패션',
+        'product': '제품',
+        'portrait': '포트레이트',
+        'car': '자동차',
+        'food': '음식',
+        'general': '일반'
+    };
+    return categoryMap[category] || '일반';
+}
 
 // 이미지 모달 생성
 function createImageModal() {
